@@ -1,6 +1,7 @@
 import { JsonPipe } from '@angular/common';
 import { Component, inject } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormUtils } from '../../../utils/form-utils';
 
 @Component({
   selector: 'app-basic-page',
@@ -9,6 +10,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 })
 export class BasicPage {
   private fb = inject(FormBuilder);
+  formUtils = FormUtils;
 
   myForm: FormGroup = this.fb.group({
     name: ['', [Validators.required, Validators.minLength(3)]],
@@ -16,33 +18,12 @@ export class BasicPage {
     inStorage: [0, [Validators.required, Validators.min(0)]],
   });
 
-  // myForm = new FormGroup({
-  //   name: new FormControl(''),
-  //   price: new FormControl(0),
-  //   inStorage: new FormControl(0),
-  // });
-
-  isValidField(fieldName: string): boolean | null {
-    return !!this.myForm.controls[fieldName].errors;
-  }
-
-  getFieldError(fieldName: string): string | null {
-    if (!this.myForm.controls[fieldName]) return null;
-
-    const errors = this.myForm.controls[fieldName].errors ?? {};
-
-    for (const key of Object.keys(errors)) {
-      switch (key) {
-        case 'required':
-          return 'Este campo es requerido';
-        case 'minlength':
-          return `Debe tener ${errors['minlength'].requiredLength} caracters`;
-        case 'min':
-          return `El precio debe de ser ${errors['min'].min} o mayor`;
-      }
-      return null;
+  onSave() {
+    if (this.myForm.invalid) {
+      this.myForm.markAllAsTouched();
+      return;
     }
 
-    return null;
+    this.myForm.reset();
   }
 }
