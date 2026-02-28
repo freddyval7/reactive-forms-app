@@ -1,6 +1,16 @@
-import { FormArray, FormGroup, ValidationErrors } from '@angular/forms';
+import { AbstractControl, FormArray, FormGroup, ValidationErrors } from '@angular/forms';
+
+async function sleep() {
+  return new Promise((resolve) => setTimeout(resolve, 1000));
+}
 
 export class FormUtils {
+  // Expresiones regulares
+  static namePattern = '([a-zA-Z]+) ([a-zA-Z]+)';
+  static emailPattern = '^[a-z0-9._%+-]+@[a-z0-9.-]+\\.[a-z]{2,4}$';
+  static notOnlySpacesPattern = '^[a-zA-Z0-9]+$';
+  //
+
   static getTextError(errors: ValidationErrors) {
     for (const key of Object.keys(errors)) {
       switch (key) {
@@ -10,6 +20,21 @@ export class FormUtils {
           return `Debe tener ${errors['minlength'].requiredLength} caracters`;
         case 'min':
           return `El precio debe de ser ${errors['min'].min} o mayor`;
+        case 'email':
+          return 'El email no es válido';
+        case 'emailTaken':
+          return 'El email ya está en uso';
+        case 'noStrider':
+          return 'El nombre no puede ser Strider';
+        case 'pattern':
+          if (errors['pattern'].requiredPattern === this.emailPattern) {
+            return 'El valor ingresado no luce como un email válido';
+          }
+
+          return 'Error de patrón con expresión regular';
+
+        default:
+          return 'El campo no es válido';
       }
       return null;
     }
@@ -39,5 +64,42 @@ export class FormUtils {
     const errors = formArray.controls[index].errors ?? {};
 
     return this.getTextError(errors);
+  }
+
+  static isFieldOneEqualToFieldTwo(fieldOne: string, fieldTwo: string) {
+    return (formGroup: AbstractControl) => {
+      const fieldOneValue = formGroup.get(fieldOne)?.value;
+      const fieldTwoValue = formGroup.get(fieldTwo)?.value;
+
+      return fieldOneValue === fieldTwoValue ? null : { notEqual: true };
+    };
+  }
+
+  // Validaciones personalizadas
+
+  static async checkingServerResponse(control: AbstractControl): Promise<ValidationErrors | null> {
+    await sleep();
+
+    const formValue = control.value;
+
+    if (formValue === 'hola@mundo.com') {
+      return {
+        emailTaken: true,
+      };
+    }
+
+    return null;
+  }
+
+  static notStrider(control: AbstractControl): ValidationErrors | null {
+    const formValue = control.value;
+
+    if (formValue === 'strider') {
+      return {
+        noStrider: true,
+      };
+    }
+
+    return null;
   }
 }
